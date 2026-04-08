@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Miami Trip 🌴 Expense Splitter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0f1e;
+      --surface: #111827;
+      --surface2: #1a2236;
+      --border: #1f2d45;
+      --accent: #f97316;
+      --accent2: #fb923c;
+      --teal: #14b8a6;
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --red: #ef4444;
+      --purple: #a855f7;
+      --yellow: #eab308;
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --card-glow: rgba(249,115,22,0.07);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Hero Header ── */
+    .hero {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      padding: 48px 24px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='1' fill='rgba(249,115,22,0.15)'/%3E%3C/svg%3E");
+    }
+    .hero-emoji { font-size: 56px; display: block; margin-bottom: 10px; animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .hero h1 { font-size: clamp(1.8rem,5vw,3rem); font-weight: 800; background: linear-gradient(135deg, #f97316, #fb923c, #fbbf24); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .hero p { color: #94a3b8; margin-top: 8px; font-size: 1rem; }
+    .hero-stats { display: flex; justify-content: center; gap: 32px; margin-top: 28px; flex-wrap: wrap; }
+    .hero-stat { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 24px; backdrop-filter: blur(10px); }
+    .hero-stat .val { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+    .hero-stat .lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+    /* ── Layout ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 16px 80px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:700px){ .grid-2{ grid-template-columns:1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title span { font-size: 1.1rem; }
+
+    /* ── Person Cards ── */
+    .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .person-card {
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .person-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+      transition: opacity .25s;
+    }
+    .person-card:hover::before { opacity: 0.15; }
+    .person-card .avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+    .person-card .name { font-weight: 700; font-size: 1.05rem; }
+    .person-card .spent { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+    .person-card .amount { font-size: 1.4rem; font-weight: 800; margin-top: 8px; }
+    .person-card .share-diff { font-size: 0.8rem; margin-top: 4px; font-weight: 600; }
+
+    /* Colors per person */
+    .p-vasu    { background: linear-gradient(135deg, #1a1040, #0f0a2a); border-color: #7c3aed44; }
+    .p-vasu .avatar { background: #7c3aed22; color: #a855f7; }
+    .p-vasu .amount { color: #a855f7; }
+    .p-vasu::before { background: #a855f7; }
+
+    .p-arivu   { background: linear-gradient(135deg, #0a1f2e, #071520); border-color: #0ea5e944; }
+    .p-arivu .avatar { background: #0ea5e922; color: #38bdf8; }
+    .p-arivu .amount { color: #38bdf8; }
+    .p-arivu::before { background: #38bdf8; }
+
+    .p-jude    { background: linear-gradient(135deg, #1a1000, #0f0a00); border-color: #f59e0b44; }
+    .p-jude .avatar { background: #f59e0b22; color: #fbbf24; }
+    .p-jude .amount { color: #fbbf24; }
+    .p-jude::before { background: #fbbf24; }
+
+    .p-priya   { background: linear-gradient(135deg, #1a0a1a, #0f0510); border-color: #ec489944; }
+    .p-priya .avatar { background: #ec489922; color: #f472b6; }
+    .p-priya .amount { color: #f472b6; }
+    .p-priya::before { background: #f472b6; }
+
+    .p-sandeep { background: linear-gradient(135deg, #0a1a0a, #051005); border-color: #22c55e44; }
+    .p-sandeep .avatar { background: #22c55e22; color: #4ade80; }
+    .p-sandeep .amount { color: #4ade80; }
+    .p-sandeep::before { background: #22c55e; }
+
+    .p-kumar   { background: linear-gradient(135deg, #1a0a0a, #120505); border-color: #ef444444; }
+    .p-kumar .avatar { background: #ef444422; color: #f87171; }
+    .p-kumar .amount { color: #f87171; }
+    .p-kumar::before { background: #ef4444; }
+
+    /* ── Expense Table ── */
+    .expense-table { width: 100%; border-collapse: collapse; }
+    .expense-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .expense-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
+    .expense-table tr:last-child td { border-bottom: none; }
+    .expense-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .amount-cell { font-weight: 700; font-size: 0.95rem; }
+
+    /* ── Settlement ── */
+    .settlement-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      animation: slideIn .4s ease both;
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+    .settlement-item .arrow { font-size: 1.4rem; }
+    .settlement-item .from-person { font-weight: 700; }
+    .settlement-item .to-person { font-weight: 700; }
+    .settlement-item .pay-amount { margin-left: auto; font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+    .settlement-item .pay-label { font-size: 0.78rem; color: var(--muted); }
+
+    /* ── Toggle ── */
+    .tab-bar { display: flex; gap: 4px; background: var(--surface2); border-radius: 12px; padding: 4px; margin-bottom: 24px; width: fit-content; }
+    .tab-btn {
+      padding: 8px 18px; border-radius: 9px; border: none; background: transparent;
+      color: var(--muted); font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.88rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .tab-btn.active { background: var(--accent); color: white; }
+
+    /* ── Section ── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Totals bar ── */
+    .totals-bar {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      background: linear-gradient(135deg, #1a0f2e, #0f1a2e);
+      border: 1px solid #2a1f4e;
+      border-radius: 16px; padding: 20px 24px; margin-bottom: 24px;
+    }
+    .totals-bar .item { flex: 1; min-width: 140px; }
+    .totals-bar .item .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .totals-bar .item .value { font-size: 1.5rem; font-weight: 800; margin-top: 4px; }
+
+    /* ── Progress bar ── */
+    .progress-wrap { background: rgba(255,255,255,0.06); border-radius: 8px; height: 8px; overflow: hidden; margin-top: 10px; }
+    .progress-fill { height: 100%; border-radius: 8px; transition: width 1s ease; }
+
+    .green { color: var(--green); }
+    .red   { color: var(--red); }
+
+    footer { text-align:center; padding:24px; color:var(--muted); font-size:0.8rem; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="hero-emoji">🌴</span>
+  <h1>Miami Trip Expense Splitter</h1>
+  <p>Track & settle who owes what — fairly & transparently</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="val" id="stat-total">$0</div>
+      <div class="lbl">Total Spent</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-share">$0</div>
+      <div class="lbl">Per Person Share</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-txns">0</div>
+      <div class="lbl">Transactions</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-people">6</div>
+      <div class="lbl">People</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('overview')" id="tab-overview">📊 Overview</button>
+    <button class="tab-btn" onclick="showTab('expenses')" id="tab-expenses">🧾 All Expenses</button>
+    <button class="tab-btn" onclick="showTab('settle')" id="tab-settle">💸 Settlement</button>
+  </div>
+
+  <!-- ── Overview ── -->
+  <div class="section active" id="section-overview">
+    <div id="people-grid" class="people-grid"></div>
+
+    <div class="card">
+      <div class="card-title"><span>📈</span> Spending Breakdown</div>
+      <div id="breakdown-bars"></div>
+    </div>
+  </div>
+
+  <!-- ── All Expenses ── -->
+  <div class="section" id="section-expenses">
+    <div class="card">
+      <div class="card-title"><span>🧾</span> All Transactions</div>
+      <div style="overflow-x:auto">
+        <table class="expense-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Who Paid</th>
+              <th>Description</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="expense-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settlement ── -->
+  <div class="section" id="section-settle">
+    <div class="totals-bar">
+      <div class="item">
+        <div class="label">Total Group Spend</div>
+        <div class="value" style="color:var(--accent)" id="settle-total"></div>
+      </div>
+      <div class="item">
+        <div class="label">Fair Share Each</div>
+        <div class="value" style="color:var(--teal)" id="settle-share"></div>
+      </div>
+      <div class="item">
+        <div class="label">People</div>
+        <div class="value" style="color:var(--blue)" id="settle-count"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>💸</span> Who Pays Whom</div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px;">Minimum transactions to settle all debts</p>
+      <div id="settlement-list"></div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-title"><span>📋</span> Individual Balance Summary</div>
+      <div id="balance-summary"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Miami Trip 🌴 · Built with ❤️ · Split fairly among friends</footer>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const people = ['Vasu', 'Arivu', 'Jude', 'Kumar'];
+
+const colors = {
+  Vasu:    { cls:'p-vasu',    color:'#a855f7', emoji:'🧑' },
+  Arivu:   { cls:'p-arivu',   color:'#38bdf8', emoji:'👨' },
+  Jude:    { cls:'p-jude',    color:'#fbbf24', emoji:'👩' },
+  Kumar:   { cls:'p-kumar',   color:'#f87171', emoji:'👦' },
+};
+
+const expenses = [
+  { who:'Vasu',    desc:'7 Spices Restaurant',   amount:480    },
+  { who:'Arivu',   desc:'Car Rental',             amount:688    },
+  { who:'Jude',    desc:'Car Rental',             amount:688    },
+  { who:'Jude',    desc:'CVS',                    amount:59     },
+  { who:'Vasu',    desc:'Pizza',                   amount:130    },
+  { who:'Arivu',   desc:'Breakfast',              amount:70     },
+  { who:'Vasu',    desc:'Pizza',                   amount:134.15 },
+  { who:'Vasu',    desc:'Parking',                amount:70     },
+  { who:'Jude',    desc:'Girls Night',            amount:200    },
+  { who:'Arivu',   desc:'Cheros',                 amount:45     },
+  { who:'Arivu',   desc:'7 Water Bottles',        amount:7      },
+  { who:'Arivu',   desc:'Ice Cream (Girls Night)',amount:40     },
+  { who:'Jude',    desc:'Indian Store',            amount:73     },
+  { who:'Vasu',    desc:'Fresh Co',               amount:29     },
+  { who:'Vasu',    desc:'Target',                 amount:76     },
+  { who:'Vasu',    desc:'Liquor',                 amount:91     },
+  { who:'Vasu',    desc:'Buba Gump',              amount:33     },
+  { who:'Vasu',    desc:'Mojito',                 amount:70     },
+  { who:'Kumar',   desc:'Pizza',                   amount:60     },
+  { who:'Arivu',   desc:'Museum',                 amount:190    },
+  { who:'Kumar',   desc:'Coconut',                amount:60     },
+  { who:'Arivu',   desc:'Santa Ana',              amount:25     },
+  { who:'Arivu',   desc:'Win Dixie',              amount:75     },
+  { who:'Arivu',   desc:'Liquor',                 amount:75     },
+  { who:'Jude',    desc:'Petrol',                  amount:40     },
+  { who:'Vasu',    desc:'Petrol',                 amount:45     },
+  { who:'Kumar',   desc:'Lunch',                  amount:202    },
+];
+
+// ─────────────────────────────────────────────
+//  CALCULATIONS
+// ─────────────────────────────────────────────
+const total   = expenses.reduce((s,e) => s + e.amount, 0);
+const n       = people.length;
+const share   = total / n;
+
+// Spent per person
+const spent = {};
+people.forEach(p => spent[p] = 0);
+expenses.forEach(e => { spent[e.who] += e.amount; });
+
+// Balance = spent - share (positive = to receive, negative = owes)
+const balance = {};
+people.forEach(p => { balance[p] = +(spent[p] - share).toFixed(2); });
+
+// Minimum settlement (greedy)
+function settle(bal) {
+  const creditors = [], debtors = [];
+  Object.entries(bal).forEach(([name, b]) => {
+    if (b > 0.01) creditors.push({name, b});
+    else if (b < -0.01) debtors.push({name, b: -b});
+  });
+  creditors.sort((a,b) => b.b - a.b);
+  debtors.sort((a,b) => b.b - a.b);
+  const txns = [];
+  let i = 0, j = 0;
+  while (i < creditors.length && j < debtors.length) {
+    const amt = Math.min(creditors[i].b, debtors[j].b);
+    txns.push({ from: debtors[j].name, to: creditors[i].name, amount: +amt.toFixed(2) });
+    creditors[i].b -= amt;
+    debtors[j].b  -= amt;
+    if (creditors[i].b < 0.01) i++;
+    if (debtors[j].b  < 0.01) j++;
+  }
+  return txns;
+}
+const settlements = settle({...balance});
+
+// ─────────────────────────────────────────────
+//  UI HELPERS
+// ─────────────────────────────────────────────
+function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+
+function showTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+
+// Hero stats
+document.getElementById('stat-total').textContent   = fmt(total);
+document.getElementById('stat-share').textContent   = fmt(share);
+document.getElementById('stat-txns').textContent    = expenses.length;
+document.getElementById('stat-people').textContent  = n;
+
+// People cards
+const grid = document.getElementById('people-grid');
+people.forEach(p => {
+  const c = colors[p];
+  const diff = balance[p];
+  const diffSign = diff >= 0 ? '+' : '';
+  const diffColor = diff >= 0 ? '#22c55e' : '#ef4444';
+  const diffLabel = diff >= 0 ? '✅ to receive' : '⚠️ owes';
+  grid.innerHTML += `
+    <div class="person-card ${c.cls}">
+      <div class="avatar">${c.emoji}</div>
+      <div class="name">${p}</div>
+      <div class="spent">Paid: ${fmt(spent[p])}</div>
+      <div class="amount">${fmt(spent[p])}</div>
+      <div class="share-diff" style="color:${diffColor}">${diffSign}${fmt(diff)} ${diffLabel}</div>
+
+      <div class="progress-wrap" style="margin-top:12px">
+        <div class="progress-fill" style="width:${Math.min(100,(spent[p]/total)*100*n)}%;background:${c.color}"></div>
+      </div>
+    </div>`;
+});
+
+// Breakdown bars
+const maxSpent = Math.max(...Object.values(spent));
+const barsEl = document.getElementById('breakdown-bars');
+people.forEach(p => {
+  const pct = (spent[p] / maxSpent) * 100;
+  const c = colors[p];
+  barsEl.innerHTML += `
+    <div style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:600">${c.emoji} ${p}</span>
+        <span style="font-weight:700;color:${c.color}">${fmt(spent[p])}</span>
+      </div>
+      <div class="progress-wrap" style="height:12px">
+        <div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${c.color}aa,${c.color})"></div>
+      </div>
+    </div>`;
+});
+
+// Expense table
+const tbody = document.getElementById('expense-tbody');
+expenses.forEach((e, i) => {
+  const c = colors[e.who];
+  tbody.innerHTML += `
+    <tr>
+      <td style="color:var(--muted);font-size:0.8rem">${i+1}</td>
+      <td>
+        <span class="badge" style="background:${c.color}22;color:${c.color}">
+          ${c.emoji} ${e.who}
+        </span>
+      </td>
+      <td>${e.desc}</td>
+      <td class="amount-cell" style="color:${c.color}">${fmt(e.amount)}</td>
+    </tr>`;
+});
+
+// Settlement section
+document.getElementById('settle-total').textContent = fmt(total);
+document.getElementById('settle-share').textContent = fmt(share);
+document.getElementById('settle-count').textContent = n + ' people';
+
+const settlEl = document.getElementById('settlement-list');
+if (settlements.length === 0) {
+  settlEl.innerHTML = '<p style="color:var(--green);font-weight:600">✅ Everyone is settled up!</p>';
+} else {
+  settlements.forEach((t,i) => {
+    const cf = colors[t.from], ct = colors[t.to];
+    settlEl.innerHTML += `
+      <div class="settlement-item" style="animation-delay:${i*0.1}s">
+        <span class="badge" style="background:${cf.color}22;color:${cf.color}">${cf.emoji} ${t.from}</span>
+        <span class="arrow">→</span>
+        <div>
+          <div style="font-weight:700">pays <span style="color:${ct.color}">${t.to}</span></div>
+          <div class="pay-label">to settle their share</div>
+        </div>
+        <div style="text-align:right">
+          <div class="pay-amount">${fmt(t.amount)}</div>
+          <div class="pay-label">transfer</div>
+        </div>
+      </div>`;
+  });
+}
+
+// Balance summary
+const balEl = document.getElementById('balance-summary');
+people.forEach(p => {
+  const b = balance[p];
+  const c = colors[p];
+  const isPos = b >= 0;
+  balEl.innerHTML += `
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:1.3rem">${c.emoji}</span>
+      <div style="flex:1">
+        <div style="font-weight:700">${p}</div>
+        <div style="font-size:0.82rem;color:var(--muted)">Paid ${fmt(spent[p])} · Share is ${fmt(share)}</div>
+        <div class="progress-wrap" style="margin-top:6px;height:6px">
+          <div class="progress-fill" style="width:${Math.min(100,(spent[p]/total)*100*n)}%;background:${c.color}"></div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:800;font-size:1rem;color:${isPos ? 'var(--green)' : 'var(--red)'}">${isPos?'+':''}${fmt(b)}</div>
+        <div style="font-size:0.78rem;color:var(--muted)">${isPos ? '↑ to receive' : '↓ to pay'}</div>
+      </div>
+    </div>`;
+});
+</script>
+</body>
+</html>
